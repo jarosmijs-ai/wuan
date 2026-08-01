@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>Wuan Calculator</title>
+  <style>
+    :root {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #f9fafb;
+      background: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: radial-gradient(circle at top, #1e293b, #0f172a 60%);
+    }
+    .calculator {
+      width: min(100%, 340px);
+      padding: 20px;
+      border-radius: 24px;
+      background: rgba(17, 24, 39, .92);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    #display {
+      width: 100%;
+      height: 78px;
+      margin-bottom: 14px;
+      border: 0;
+      border-radius: 16px;
+      padding: 0 18px;
+      text-align: right;
+      font-size: 2.2rem;
+      color: #f8fafc;
+      background: #020617;
+      outline: none;
+    }
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    button {
+      min-height: 58px;
+      border: 0;
+      border-radius: 16px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #e2e8f0;
+      background: #1e293b;
+      transition: transform .08s ease, filter .15s ease;
+    }
+    button:hover { filter: brightness(1.15); }
+    button:active { transform: scale(.96); }
+    .operator { background: #334155; }
+    .clear { background: #7f1d1d; }
+    .equals {
+      grid-row: span 2;
+      background: #2563eb;
+    }
+    .zero { grid-column: span 2; }
+  </style>
+</head>
+<body>
+  <main class="calculator" aria-label="Calculadora Wuan">
+    <h1>Wuan</h1>
+    <input id="display" value="0" readonly aria-label="Resultado" />
+    <section class="keys">
+      <button class="clear" data-action="clear">C</button>
+      <button data-action="backspace">⌫</button>
+      <button class="operator" data-value="/">÷</button>
+      <button class="operator" data-value="*">×</button>
+
+      <button data-value="7">7</button>
+      <button data-value="8">8</button>
+      <button data-value="9">9</button>
+      <button class="operator" data-value="-">−</button>
+
+      <button data-value="4">4</button>
+      <button data-value="5">5</button>
+      <button data-value="6">6</button>
+      <button class="operator" data-value="+">+</button>
+
+      <button data-value="1">1</button>
+      <button data-value="2">2</button>
+      <button data-value="3">3</button>
+      <button class="equals" data-action="equals">=</button>
+
+      <button class="zero" data-value="0">0</button>
+      <button data-value=".">.</button>
+    </section>
+  </main>
+
+  <script>
+    const display = document.getElementById('display');
+    let expression = '';
+
+    function render() {
+      display.value = expression || '0';
+    }
+
+    function append(value) {
+      const operators = ['+', '-', '*', '/'];
+      const last = expression.at(-1);
+
+      if (operators.includes(value) && operators.includes(last)) {
+        expression = expression.slice(0, -1) + value;
+      } else {
+        expression += value;
+      }
+      render();
+    }
+
+    function calculate() {
+      if (!expression) return;
+      try {
+        if (!/^[0-9+\-*/.()\s]+$/.test(expression)) throw new Error('Invalid input');
+        const result = Function(`"use strict"; return (${expression})`)();
+        expression = Number.isFinite(result) ? String(Number(result.toFixed(10))) : '';
+        render();
+      } catch {
+        display.value = 'Error';
+        expression = '';
+      }
+    }
+
+    document.querySelector('.keys').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+
+      if (button.dataset.value) append(button.dataset.value);
+      if (button.dataset.action === 'clear') {
+        expression = '';
+        render();
+      }
+      if (button.dataset.action === 'backspace') {
+        expression = expression.slice(0, -1);
+        render();
+      }
+      if (button.dataset.action === 'equals') calculate();
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if (/^[0-9+\-*/.]$/.test(event.key)) append(event.key);
+      if (event.key === 'Enter' || event.key === '=') calculate();
+      if (event.key === 'Backspace') {
+        expression = expression.slice(0, -1);
+        render();
+      }
+      if (event.key === 'Escape') {
+        expression = '';
+        render();
+      }
+    });
+  </script>
+</body>
+</html>
